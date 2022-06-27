@@ -27,7 +27,7 @@ class MyInput {
                 }
             }
         }
-
+        input.nextLine(); // consume the \n for safe input next!
         return out;
     }
 
@@ -50,10 +50,6 @@ class MyInput {
 
         return out;
     }
-
-    public String nextLnUnsafe() {
-        return input.nextLine();
-    }
 }
 
 class Main {
@@ -66,7 +62,7 @@ class Main {
         int tries = 1;
         System.out.println();
 
-        while (guess != answer && tries <= 6) {
+        while (guess != answer && tries < 6) {
             System.out.print("Your guess is too ");
             if (guess > answer) {
                 System.out.println("high");
@@ -83,8 +79,10 @@ class Main {
 
         if (tries == 1) {
             System.out.println("Great! Congratulations " + name + "! You got it first try!");
-        } else {
+        } else if (tries <= 6) {
             System.out.printf("Good job, %s! You guessed my number in %d guesses.\n", name, tries);
+        } else {
+            System.out.printf("Oh no %s, you weren't able to guess the number in 6 tries or less.\n", name);
         }
     }
 
@@ -96,7 +94,6 @@ class Main {
         while (true) {
             game(input, name);
             System.out.println("Would you like to play again? (y or n)\n");
-            input.nextLine(); // consuming the \n
 
             String repeat = input.nextLine().toLowerCase();
             System.out.println();
