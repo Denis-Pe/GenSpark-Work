@@ -1,6 +1,34 @@
-import java.util.InputMismatchException;
 import java.util.Random;
 import java.util.Scanner;
+
+class MyInput {
+    Scanner input;
+
+    MyInput() {
+        input = new Scanner(System.in);
+    }
+
+    public int nextInt() {
+        int out;
+
+        try {
+            out = input.nextInt();
+        } catch (Exception err) {
+            System.out.println("Your input was not a valid integer. Try again:");
+            while (true) {
+                input.nextLine();
+                try {
+                    out = input.nextInt();
+                    break;
+                } catch (Exception secondErr) {
+                    System.out.println("Try once again:");
+                }
+            }
+        }
+
+        return out;
+    }
+}
 
 public class Main {
     final static String PROLOGUE = """
@@ -21,24 +49,15 @@ public class Main {
     final static String VICTORY = "Spits out a chests of gold right in front of you!";
 
     public static void main(String[] args) {
-        Scanner input = new Scanner(System.in);
+        MyInput input = new MyInput();
 
         System.out.println(PROLOGUE);
         System.out.println();
 
-        int usrAns;
-        try {
+        int usrAns = input.nextInt();
+        while (usrAns < 1 || usrAns > 2) {
+            System.out.println("Choose a number between 1 and 2 inclusive. Try again:");
             usrAns = input.nextInt();
-        } catch (Exception err) {
-            System.out.println("That was not a valid input. Try again:");
-            while(true) {
-                try {
-                    usrAns = input.nextInt();
-                    break;
-                } catch (Exception anotherErr) {
-                    System.out.println("Try once again:");
-                }
-            }
         }
         int rightAns = new Random().nextInt(1, 2+1);
 
