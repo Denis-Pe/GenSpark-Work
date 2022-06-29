@@ -53,8 +53,14 @@ class MyInput {
 }
 
 class Main {
+    final static String TOO_HIGH = "Your guess is too high";
+    final static String TOO_LOW = "Your guess is too low";
 
-    private static void game(MyInput input, String name) {
+    static String getResponseUnequal(int guess, int answer) {
+        return (guess > answer? TOO_HIGH : TOO_LOW);
+    }
+
+    private static String game(MyInput input, String name) {
         int answer = new Random().nextInt(1, 20+1);
 
         System.out.println("\nWell, " + name + ", I am thinking of a number between 1 and 20.\nTake a guess.\n");
@@ -63,12 +69,7 @@ class Main {
         System.out.println();
 
         while (guess != answer && tries < 6) {
-            System.out.print("Your guess is too ");
-            if (guess > answer) {
-                System.out.println("high");
-            } else {
-                System.out.println("low");
-            }
+            System.out.println(getResponseUnequal(guess, answer));
             System.out.println("Take a guess\n");
 
             guess = input.nextInt();
@@ -78,11 +79,11 @@ class Main {
         }
 
         if (tries == 1) {
-            System.out.println("Great! Congratulations " + name + "! You got it first try!");
+             return String.format("Great! Congratulations %s! You got it first try!\n", name);
         } else if (tries <= 6) {
-            System.out.printf("Good job, %s! You guessed my number in %d guesses.\n", name, tries);
+             return String.format("Good job, %s! You guessed my number in %d guesses.\n", name, tries);
         } else {
-            System.out.printf("Oh no %s, you weren't able to guess the number in 6 tries or less.\n", name);
+             return String.format("Oh no %s, you weren't able to guess the number in 6 tries or less.\n", name);
         }
     }
 
@@ -92,7 +93,9 @@ class Main {
         String name = input.nextLine();
 
         while (true) {
-            game(input, name);
+            String outcomeMessage = game(input, name);
+            System.out.println(outcomeMessage);
+
             System.out.println("Would you like to play again? (y or n)\n");
 
             String repeat = input.nextLine().toLowerCase();
