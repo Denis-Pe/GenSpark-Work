@@ -1,0 +1,3 @@
+No way! %s %s has struck %s %s with a critical hit of %d damage!
+Incredible! %s %s gets a nice hit and %s %s has been inflicted %d damage!
+%s %s has gotten %s %s with a hit on the neck and has inflicted %d damage!
