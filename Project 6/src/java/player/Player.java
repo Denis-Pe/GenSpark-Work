@@ -2,90 +2,141 @@ package player;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.util.List;
+
+import game.Treasure;
+import inventory.DamageFxItem;
+import inventory.HealthItem;
 import inventory.Inventory;
+import inventory.Weapon;
+
+import static utilities.AdvRandom.*;
 
 public class Player {
-    static String[] UNLIKELY_CRITICAL_HIT_MSGS;
-    static String LIKELY_CRITICAL_HIT_MSG = "%s %s hits %s %s with a critical hit for %d damage.";
-    static String NO_CRITICAL = "%s %s hits %s %s and inflicts %d damage.";
+    static String[] unlikelyCriticalHitMsgs;
+    static String likelyCriticalHitMsg = "%s %s hits %s %s with a critical hit for %d damage.";
+    static String noCriticalMsg = "%s %s hits %s %s and inflicts %d damage.";
 
     final static String PLAYER_DEATH = "You've been slain by %s the %s.";
     final static String GOBLIN_DEATH = "You have slain %s the %s";
 
-    private final String icon;
+    final static int DEFAULT_HEALTH = 10;
+
+    private String icon;
+
+    public int getHealth() {
+        return health;
+    }
 
     public enum Type {
         Goblin, Human
     }
-    private final Type type;
+    private Type type;
 
-    private final String name;
+    private String name;
 
-    private int health;
-    private int maxHealth;
+    int health;
+    int maxHealth;
 
-    // base because this is by default,
-    // the inventory will add or subtract but this
-    // will not take it into account
-    private int baseStrength;
+    private int damage;
 
     // goblins drop this
-    private Inventory inv;
+    protected Inventory inv;
 
-    public Player(String icon, Type type, String name, int health, int maxHealth, int strength, Inventory inv) {
+    public Player(String icon, Type type, String name, Inventory inv) {
         this.icon = icon;
         this.name = name;
         this.type = type;
-        this.health = health;
-        this.maxHealth = maxHealth;
-        this.baseStrength = strength;
+        this.health = DEFAULT_HEALTH;
+        this.maxHealth = DEFAULT_HEALTH;
         this.inv = inv;
 
-        try (BufferedReader reader = new BufferedReader(new FileReader("resources/unlikelyCriticalHitMsgs.txt"))) {
-            UNLIKELY_CRITICAL_HIT_MSGS = (String[]) reader.lines().toList().toArray();
-        } catch (Exception e) {
-            UNLIKELY_CRITICAL_HIT_MSGS = new String[]{"No way! %s %s has struck %s %s with a critical hit of %d damage!"};
+        if (type == Type.Human) {
+            maxHealth += 10;
         }
+
+        try (BufferedReader reader = new BufferedReader(new FileReader("resources/unlikelyCriticalHitMsgs.txt"))) {
+            List<String> temp = reader.lines().toList();
+
+            unlikelyCriticalHitMsgs = new String[temp.size()];
+            for (int i = 0; i < temp.size(); i++) {
+                unlikelyCriticalHitMsgs[i] = temp.get(i);
+            }
+        } catch (Exception e) {
+            unlikelyCriticalHitMsgs = new String[]{"No way! %s %s has struck %s %s with a critical hit of %d damage!"};
+        }
+
+        updateStats();
+    }
+
+    public void updateStats() {
+        Weapon w = inv.getWeapon();
+        damage = w.getDamage();
+
+        float dmgMultiplier = inv.getDamageBooster().map(DamageFxItem::getMultiplier).orElse(1.0f);
+        damage = Math.round(damage*dmgMultiplier);
+
+        int extraHealth = inv.getHealthItem().map(HealthItem::getExtraHealth).orElse(0);
+        maxHealth = DEFAULT_HEALTH + extraHealth;
+
+        if (type == Type.Human) {
+            maxHealth += 10;
+        }
+    }
+
+    public Inventory getInventory() {
+        return inv;
+    }
+
+    public void improveInv(Treasure loot) {
+        inv.improve(loot.getInventory());
     }
 
     /// Return the message of the hit
     public static String attack(Player attacker, Player attacked) {
         // ==Calculate whether this is a critical hit==
-        //         BASE STRENGTH | MAX  STRENGTH
-        // player.Player |     10       |     100
-        // Goblin |   varies^1   |     100
-        // ^1: random but ensuring it starts off easy and gets harder as the game goes on
-        //
-        // Critical likelihood is based on a random number between 1 and 100 inclusive
-        // subtract the attacker's strength, with a critical hit when the result thereof
-        // is less than or equal to zero. So, we should in theory get attacker.strength%
+        // Critical likelihood is attacker.damage percent
         // chance of a critical hit. With "unlikely" being 50% chance or below and "likely"
         // being above that
         //
-        // Now what does a critical hit mean? The attacker hits 1.5 times their normal strength
+        // Now what does a critical hit mean? The attacker hits 1.5 times their normal damage
         // and of course the critical hit message
-        boolean critical = (Math.random() * 100 + 1) - attacker.getStrength() <= 0;
+        boolean critical = nextBoolPercentage(attacker.damage);
 
-        int damage = critical? (int) Math.round(attacker.getStrength()*1.5) : attacker.getStrength();
+        int damage = critical? Math.round(attacker.getDamage()*1.5f) : attacker.damage;
         if (attacked instanceof Human h) {
-            damage *= (int) h.getDmgReception();
+            damage = (int) (damage*h.getDmgReception());
         }
 
         attacked.health -= damage;
 
-        // if critical, return a member of UNLIKELY... at random, else return LIKELY...
-        return critical? UNLIKELY_CRITICAL_HIT_MSGS[(int)(Math.random() * UNLIKELY_CRITICAL_HIT_MSGS.length)]
-            : LIKELY_CRITICAL_HIT_MSG;
+        if (critical) {
+            return (attacker.damage <= 50 ? randomItemArr(unlikelyCriticalHitMsgs) : likelyCriticalHitMsg)
+                    .formatted(attacker.name, attacker.getTypeName(), attacked.name, attacked.getTypeName(), damage);
+        } else {
+            return noCriticalMsg.formatted(attacker.name, attacker.getTypeName(), attacked.name, attacked.getTypeName(), damage);
+        }
+    }
+
+    public boolean isDead() {
+        return health <= 0;
     }
 
     // ----GETTERS----
 
-    public String getTypeName() {
-        return type == Type.Goblin ? "Goblin" : "player.Human";
+    public String getIcon() {
+        return icon;
     }
 
-    // TODO: FACTOR IN INVENTORY FOR A PLAYER
-    public int getStrength() {
-        return baseStrength;
+    public String getName() {
+        return name;
+    }
+
+    public String getTypeName() {
+        return type == Type.Goblin ? "Goblin" : "Human";
+    }
+
+    public int getDamage() {
+        return damage;
     }
 }

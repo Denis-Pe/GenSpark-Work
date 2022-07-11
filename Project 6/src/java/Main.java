@@ -1,5 +1,14 @@
+import game.Game;
+import utilities.Input;
+
 public class Main {
     public static void main(String[] args) {
-        System.out.println("Hola Mundo!");
+        Game g = new Game("pedro");
+        Input input = new Input();
+
+        while(true) {
+            g.printMap();
+            g.nextTurn(input);
+        }
     }
 }

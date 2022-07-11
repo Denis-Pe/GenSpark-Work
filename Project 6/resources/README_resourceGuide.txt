@@ -10,9 +10,4 @@ unlikelyCriticalHitMessages.txt   | Messages that get printed when a critical hi
                                   | this is because the formatting is always
                                   | attacker's type, name, attacked's type, name, and damage inflicted
 ------------------------------------------------------------------------
-map.txt                           | Text file of the map.
-                                  | Each o is a slot where a character, whether goblin
-                                  | or human, can be in.
-                                  | The s is where the Human spawns
-                                  |
                                   |

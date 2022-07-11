@@ -3,139 +3,6 @@ package inventory;
 import java.util.ArrayList;
 import java.util.Optional;
 
-enum Weapon {
-    KitchenKnife, Rapier, Sabre, MomFlipFlop, GreenKnightAxe;
-
-    String name;
-    String description;
-    int damage;
-
-    Weapon() {
-        switch (this) {
-            case KitchenKnife -> {
-                name = "Kitchen Knife";
-                description = "Some japanese kitchen knife your brought to the adventure. Pretty sharp! Be careful with this thing!";
-                damage = 10;
-            }
-            case Rapier -> {
-                name = "Rapier";
-                description = "Got lost in some Spanish war, well now it's here.";
-                damage = 20;
-            }
-            case Sabre -> {
-                name ="French Sabre";
-                description = "It has dirt on it as if someone dug it underground previously, strange...";
-                damage = 30;
-            }
-            case MomFlipFlop -> {
-                name = "Flip-Flops";
-                description = "Dual wielded mommy's flip flops.";
-                damage = 40;
-            }
-            case GreenKnightAxe -> {
-                name = "Axe of the Green Knight";
-                description = "The Green Knight's Axe, found with the Knight's head.";
-                damage = 50;
-            }
-        };
-    }
-}
-
-enum DamageFxItem {
-    PeanutButter, ProteinShake, Taser, Steroids, ColdWater;
-
-    String name;
-    String description;
-    float multiplier;
-
-    DamageFxItem() {
-        switch (this) {
-            case PeanutButter -> {
-                name = "Peanut Butter";
-                description = "Nothing like some highly nutritive peanut butter to make you stronger!";
-                multiplier = 1.10f;
-            }
-            case ProteinShake -> {
-                name = "Protein Shake";
-                description = "Bought at Walmart.";
-                multiplier = 1.25f;
-            }
-            case Taser -> {
-                name = "Taser";
-                // whether it is realistic, I don't know lol
-                description = "Electrify your weapon in order to give your opponent a nice zap when you hit him.";
-                multiplier = 1.50f;
-            }
-            case Steroids -> {
-                name = "Steroids";
-                description = "Nice boost of strength for using your weapon, prolonged use not recommended.";
-                multiplier = 1.75f;
-            }
-            case ColdWater -> {
-                name = "Cold Water";
-                description = "Cold water from the shower.";
-                multiplier = 2.00f;
-            }
-        };
-    }
-}
-
-enum DefenseItem {
-    Helmet, Chestplate, Leggings, Arms;
-
-    String name;
-    String description;
-
-    DefenseItem() {
-        switch (this) {
-            case Helmet -> {
-                name = "Helmet";
-                description = "Wear protection for you skin and hair under this metal helmet.";
-            }
-            case Chestplate -> {
-                name = "Chest-plate";
-                description = "This baby will protect you very nicely.";
-            }
-            case Leggings -> {
-                name = "Leggings";
-                description = "Now you can receive blows to the legs and without worries.";
-            }
-            case Arms -> {
-                name = "Arm Protection";
-                description = "Very well made piece of armor covering your arms, increased mobility.";
-            }
-        };
-    }
-}
-
-enum HealthItem {
-    RedPotion, Gatorade, Spaghetti;
-
-    String name;
-    String description;
-    int extraHealth;
-
-    HealthItem() {
-        switch (this) {
-            case RedPotion -> {
-                name = "Red Potion";
-                description = "Red potion, looks like there's lighting in the liquid.";
-                extraHealth = 15;
-            }
-            case Gatorade -> {
-                name = "Gatorade";
-                description = "Gatorade for a nice refresh.";
-                extraHealth = 40;
-            }
-            case Spaghetti -> {
-                name = "Spaghetti";
-                description = "Mom's spaghetti, found in the lunchbox you lost some time ago. Still nice and fresh.";
-                extraHealth = 90;
-            }
-        };
-    }
-}
-
 public class Inventory {
     Weapon weapon;
     Optional<DamageFxItem> damageBooster;
@@ -154,5 +21,80 @@ public class Inventory {
         this.damageBooster = damageBooster;
         this.healthItem = healthItem;
         this.defenseItems = defenseItems;
+    }
+
+    // ----GETTERS----
+
+    public Weapon getWeapon() {
+        return weapon;
+    }
+
+    public Optional<DamageFxItem> getDamageBooster() {
+        return damageBooster;
+    }
+
+    public Optional<HealthItem> getHealthItem() {
+        return healthItem;
+    }
+
+    public ArrayList<DefenseItem> getDefenseItems() {
+        return new ArrayList<>(defenseItems);
+    }
+
+    public void improve(Inventory other) {
+        if (other.weapon.ordinal() > weapon.ordinal()) {
+            weapon = other.weapon;
+        }
+
+        if (other.damageBooster.isPresent()) {
+            DamageFxItem otherDmgFx = other.damageBooster.get();
+
+            if (damageBooster.isPresent() &&
+                otherDmgFx.ordinal() > damageBooster.get().ordinal()) {
+                damageBooster = other.damageBooster;
+            } else if (damageBooster.isEmpty()) {
+                damageBooster = other.damageBooster;
+            }
+        }
+
+        if (other.healthItem.isPresent()) {
+            HealthItem otherHlth = other.healthItem.get();
+
+            if (healthItem.isPresent() &&
+                    otherHlth.ordinal() > healthItem.get().ordinal()) {
+                healthItem = other.healthItem;
+            } else if (healthItem.isEmpty()) {
+                healthItem = other.healthItem;
+            }
+        }
+
+        for (DefenseItem di : other.defenseItems) {
+            if (!defenseItems.contains(di)) {
+                defenseItems.add(di);
+            }
+        }
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder output = new StringBuilder();
+        output.append("Weapon: ");
+        output.append(weapon.getName());
+
+        output.append(", Damage Booster: ");
+        if (damageBooster.isPresent()) {
+            output.append(damageBooster.get().getName());
+        } else {
+            output.append("NONE");
+        }
+
+        output.append(", Health Item: ");
+        if (healthItem.isPresent()) {
+            output.append(healthItem.get().getName());
+        } else {
+            output.append("NONE");
+        }
+
+        return output.toString();
     }
 }
