@@ -19,6 +19,7 @@ public class AdvRandom {
         return list.get((int)(Math.random()*list.size()));
     }
 
+    // Read as a random Char from the Str
     /// Precondition: str is not empty
     public static char randomCharStr(String str) {
         return str.charAt((int)(Math.random()*str.length()));
