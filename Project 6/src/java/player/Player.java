@@ -84,6 +84,10 @@ public class Player {
         }
     }
 
+    public String getStats() {
+        return "Health: %d, Damage: %d".formatted(health, damage);
+    }
+
     public Inventory getInventory() {
         return inv;
     }

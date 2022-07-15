@@ -50,6 +50,7 @@ public class Game {
         ArrayList<Character> possibleDirections =
                 freeSlotsSurrounding(humanPos[0], humanPos[1]);
 
+        System.out.println("Stats: " + h.getStats());
         System.out.println("Inventory: " + h.getInventory());
 
         System.out.println("Choose an action. Options:");

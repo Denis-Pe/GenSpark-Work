@@ -18,8 +18,7 @@ import static utilities.AdvRandom.*;
 // happens should be at least closer and
 // closer to 50% the more times it happens
 class AdvRandomTest {
-    // feel free to tweak any of these values if you got a few minutes and/or a faster VM or PC
-
+    // feel free to tweak any of these values
     final static long REPETITIONS = 100_000_000L;
     final static double WIGGLE_ROOM = 0.001; // plus minus 0.1%
     final static int MAX_COLLECTION_SIZE = 100; // for tests relating to collections like lists and arrays
@@ -135,7 +134,7 @@ class AdvRandomTest {
     @Test
     void testRandomItemListIncLen() {
         for (int i = 10; i <= MAX_COLLECTION_SIZE; i+=10) {
-            List<Integer> test = IntStream.rangeClosed(1, MAX_COLLECTION_SIZE)
+            List<Integer> test = IntStream.rangeClosed(1, i)
                     .boxed()
                     .toList();
 
