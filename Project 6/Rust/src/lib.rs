@@ -254,10 +254,14 @@ pub extern "system" fn Java_main_Main_run_1game(
                             {
                                 tex.draw(&surface_texture);
                             }
+                            if (*(*mutx_inner.get_mut())).inner.is_empty() {
+                                // to avoid errors of trying to present the texture without
+                                // anything done to it in case Java is behind of Rust and Rust
+                                // tries to draw before Java has added anything to draw
+                                return;
+                            }
                         }
                         drop(mutx_inner);
-
-                        // gui.draw(&window, &surface_texture);
 
                         surface_texture.present();
                     }
