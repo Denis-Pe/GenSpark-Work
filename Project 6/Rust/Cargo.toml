@@ -1,0 +1,28 @@
+[package]
+name = "humans_v_goblins_backend"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate_type = ["cdylib"]
+
+[dependencies]
+winit = "0.26"
+cgmath = "0.18"
+env_logger = "0.9"
+log = "0.4"
+wgpu = "0.13"
+pollster = "0.2"
+bytemuck = { version = "1.8", features = ["derive"] }
+imgui = "0.8"
+imgui-wgpu = "0.20"
+imgui-winit-support = { version = "0.8", features = ["winit-26"] }
+image = { version = "0.24", default-features = false, features = [
+  "png",
+  "jpeg",
+] }
+jni = "0.19"
+lazy_static = "1.4"
+winit_input_helper = "0.12"

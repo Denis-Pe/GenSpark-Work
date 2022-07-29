@@ -1,100 +1,61 @@
 package inventory;
 
 import java.util.ArrayList;
-import java.util.Optional;
 
 public class Inventory {
-    Weapon weapon;
-    Optional<DamageFxItem> damageBooster;
-    Optional<HealthItem> healthItem;
-    ArrayList<DefenseItem> defenseItems;
+	private ArrayList<Item> items;
 
-    public static Inventory HumanDefaultInv() {
-        return new Inventory(Weapon.KitchenKnife, Optional.empty(), Optional.empty(), new ArrayList<>());
-    }
+	public Inventory() {
+		items = new ArrayList<>();
+	}
 
-    public Inventory(Weapon weapon,
-                     Optional<DamageFxItem> damageBooster,
-                     Optional<HealthItem> healthItem,
-                     ArrayList<DefenseItem> defenseItems) {
-        this.weapon = weapon;
-        this.damageBooster = damageBooster;
-        this.healthItem = healthItem;
-        this.defenseItems = defenseItems;
-    }
+	public void addItem(Item item) {
+		items.add(item);
+	}
 
-    // ----GETTERS----
+	public Inventory withItem(Item item) {
+		Inventory inv = new Inventory();
+		inv.items.addAll(items);
+		inv.items.add(item);
+		return inv;
+	}
 
-    public Weapon getWeapon() {
-        return weapon;
-    }
+	/**
+	 * Replace whatever item has the same Item.Type as the item passed in.
+	 * If the item is not there, this won't do anything and will act as
+	 * addItem(item).
+	 * Note that this will replace *every* item of the same type.
+	 * 
+	 * @param item
+	 */
+	public void replaceItemType(Item item) {
+		items.removeIf(i -> i.type() == item.type());
+		items.add(item);
+	}
 
-    public Optional<DamageFxItem> getDamageBooster() {
-        return damageBooster;
-    }
+	/**
+	 * Replace whatever item has the same name as the item passed in.
+	 * If the item is not there, this won't do anything and will act as
+	 * addItem(item).
+	 * 
+	 * @param item
+	 */
+	public void replaceItemName(Item item) {
+		items.removeIf(i -> i.name().equals(item.name()));
+		items.add(item);
+	}
 
-    public Optional<HealthItem> getHealthItem() {
-        return healthItem;
-    }
+	public int getScalarEffect(Item.Type type, int initialValue) {
+		return items
+				.parallelStream()
+				.reduce(0, (acc, next) -> acc + (next.type() == type ? next.getTotalStat(initialValue) : 0),
+						(t1, t2) -> t1 + t2);
+	}
 
-    public ArrayList<DefenseItem> getDefenseItems() {
-        return new ArrayList<>(defenseItems);
-    }
-
-    public void improve(Inventory other) {
-        if (other.weapon.ordinal() > weapon.ordinal()) {
-            weapon = other.weapon;
-        }
-
-        if (other.damageBooster.isPresent()) {
-            DamageFxItem otherDmgFx = other.damageBooster.get();
-
-            if (damageBooster.isPresent() &&
-                otherDmgFx.ordinal() > damageBooster.get().ordinal()) {
-                damageBooster = other.damageBooster;
-            } else if (damageBooster.isEmpty()) {
-                damageBooster = other.damageBooster;
-            }
-        }
-
-        if (other.healthItem.isPresent()) {
-            HealthItem otherHlth = other.healthItem.get();
-
-            if (healthItem.isPresent() &&
-                    otherHlth.ordinal() > healthItem.get().ordinal()) {
-                healthItem = other.healthItem;
-            } else if (healthItem.isEmpty()) {
-                healthItem = other.healthItem;
-            }
-        }
-
-        for (DefenseItem di : other.defenseItems) {
-            if (!defenseItems.contains(di)) {
-                defenseItems.add(di);
-            }
-        }
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder output = new StringBuilder();
-        output.append("Weapon: ");
-        output.append(weapon.getName());
-
-        output.append(", Damage Booster: ");
-        if (damageBooster.isPresent()) {
-            output.append(damageBooster.get().getName());
-        } else {
-            output.append("NONE");
-        }
-
-        output.append(", Health Item: ");
-        if (healthItem.isPresent()) {
-            output.append(healthItem.get().getName());
-        } else {
-            output.append("NONE");
-        }
-
-        return output.toString();
-    }
+	public int getMultiplierEffect(Item.Type type, int initialValue) {
+		return items
+				.parallelStream()
+				.reduce(initialValue, (acc, next) -> acc * (int) (next.type() == type ? (Float) next.effect().val : 0),
+						(t1, t2) -> t1 + t2);
+	}
 }

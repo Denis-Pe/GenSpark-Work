@@ -1,38 +1,47 @@
 package player;
 
+import graph.Graph;
 import inventory.Inventory;
+import inventory.Item;
 
 public class Human extends Player {
-    private static final int HEAL_RATE = 10;
+    float dmgReception;
 
-    // 1.0 receives full damage
-    // 0.0 receives none
-    // each piece of armour reduces it by 0.25
-    private float dmgReception;
+    public Human(String iconFilename, String name, int damage, Inventory inv, Graph.Position pos, Graph<Player> graph, float dmgReception) {
+        super(iconFilename, name, damage, inv, pos, graph);
+        this.dmgReception = dmgReception;
+    }
 
-    public static final String ICON = "P";
-
-    public Human(String name) {
-        // Icons I like: 🗡⚔ Not monospace :((
-        super("P", Type.Human, name, Inventory.HumanDefaultInv());
-        updateStats();
+    public void increaseHealth(int amount) {
+        health = Math.min(health+amount, maxHealth);
     }
 
     @Override
-    public void updateStats() {
-        super.updateStats();
-
-        dmgReception = 1.0f - inv.getDefenseItems().size()*0.25f;
+    public void decreaseHealth(int damage) {
+        health -= inv.getMultiplierEffect(Item.Type.Armor, damage);
     }
 
-    public float getDmgReception() {
-        return dmgReception;
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + Float.floatToIntBits(dmgReception);
+        return result;
     }
 
-    public void heal() {
-        this.health += HEAL_RATE;
-        if (this.health > this.maxHealth) {
-            this.health = this.maxHealth;
-        }
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Human other = (Human) obj;
+        if (Float.floatToIntBits(dmgReception) != Float.floatToIntBits(other.dmgReception))
+            return false;
+        return true;
     }
+
+    
 }

@@ -1,146 +1,158 @@
 package player;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.util.List;
-
-import game.Treasure;
-import inventory.DamageFxItem;
-import inventory.HealthItem;
+import graph.Graph;
 import inventory.Inventory;
-import inventory.Weapon;
+import main.Main;
 
-import static utilities.AdvRandom.*;
-
-public class Player {
-    static String[] unlikelyCriticalHitMsgs;
-    static String likelyCriticalHitMsg = "%s %s hits %s %s with a critical hit for %d damage.";
-    static String noCriticalMsg = "%s %s hits %s %s and inflicts %d damage.";
-
-    final static String PLAYER_DEATH = "You've been slain by %s the %s.";
-    final static String GOBLIN_DEATH = "You have slain %s the %s";
-
+public abstract class Player {
     final static int DEFAULT_HEALTH = 10;
+    final static float CRITICAL_MULTIPLIER = 1.5f;
 
-    private String icon;
-
-    public int getHealth() {
-        return health;
-    }
-
-    public enum Type {
-        Goblin, Human
-    }
-    private Type type;
-
+    private String iconFilename;
     private String name;
-
-    int health;
-    int maxHealth;
-
+    protected int health;
+    protected int maxHealth;
     private int damage;
-
-    // goblins drop this
     protected Inventory inv;
+    private Graph.Position pos;
 
-    public Player(String icon, Type type, String name, Inventory inv) {
-        this.icon = icon;
+    Player(String iconFilename, String name, int damage, Inventory inv, Graph.Position pos, Graph<Player> graph) {
+        this.iconFilename = iconFilename;
         this.name = name;
-        this.type = type;
         this.health = DEFAULT_HEALTH;
         this.maxHealth = DEFAULT_HEALTH;
+        this.damage = damage;
         this.inv = inv;
+        this.pos = pos;
 
-        if (type == Type.Human) {
-            maxHealth += 10;
-        }
-
-        try (BufferedReader reader = new BufferedReader(new FileReader("resources/unlikelyCriticalHitMsgs.txt"))) {
-            List<String> temp = reader.lines().toList();
-
-            unlikelyCriticalHitMsgs = new String[temp.size()];
-            for (int i = 0; i < temp.size(); i++) {
-                unlikelyCriticalHitMsgs[i] = temp.get(i);
-            }
-        } catch (Exception e) {
-            unlikelyCriticalHitMsgs = new String[]{"No way! %s %s has struck %s %s with a critical hit of %d damage!"};
-        }
-
-        updateStats();
+        graph.setAt(pos, this);
+        draw();
     }
 
-    public void updateStats() {
-        Weapon w = inv.getWeapon();
-        damage = w.getDamage();
+    public void moveTo(Graph.Position newPos, Graph<Player> graph) {
+        if (!graph.getAt(pos).equals(this)) {
+            throw new IllegalAccessError(
+                    "Graph does not contain player at the position equal to the player's position");
+        }
 
-        float dmgMultiplier = inv.getDamageBooster().map(DamageFxItem::getMultiplier).orElse(1.0f);
-        damage = Math.round(damage*dmgMultiplier);
+        graph.movePosToPos(pos, newPos);
+        pos = newPos;
+        Main.move_image(
+                name,
+                pos.x() * Main.TILE_LEN / Main.WIN_WIDTH,
+                pos.y() * Main.TILE_LEN / Main.WIN_HEIGHT);
+    }
 
-        int extraHealth = inv.getHealthItem().map(HealthItem::getExtraHealth).orElse(0);
-        maxHealth = DEFAULT_HEALTH + extraHealth;
-
-        if (type == Type.Human) {
-            maxHealth += 10;
+    public void moveNorth(Graph<Player> graph) {
+        if (pos.y() - 1 >= 0) {
+            moveTo(pos.decY(), graph);
         }
     }
 
-    public String getStats() {
-        return "Health: %d, Damage: %d".formatted(health, damage);
-    }
-
-    public Inventory getInventory() {
-        return inv;
-    }
-
-    public void improveInv(Treasure loot) {
-        inv.improve(loot.getInventory());
-    }
-
-    /// Return the message of the hit
-    public static String attack(Player attacker, Player attacked) {
-        // ==Calculate whether this is a critical hit==
-        // Critical likelihood is attacker.damage percent
-        // chance of a critical hit. With "unlikely" being 50% chance or below and "likely"
-        // being above that
-        //
-        // Now what does a critical hit mean? The attacker hits 1.5 times their normal damage
-        // and of course the critical hit message
-        boolean critical = nextBoolPercentage(attacker.damage);
-
-        int damage = critical? Math.round(attacker.getDamage()*1.5f) : attacker.damage;
-        if (attacked instanceof Human h) {
-            damage = (int) (damage*h.getDmgReception());
-        }
-
-        attacked.health -= damage;
-
-        if (critical) {
-            return (attacker.damage <= 50 ? randomItemArr(unlikelyCriticalHitMsgs) : likelyCriticalHitMsg)
-                    .formatted(attacker.name, attacker.getTypeName(), attacked.name, attacked.getTypeName(), damage);
-        } else {
-            return noCriticalMsg.formatted(attacker.name, attacker.getTypeName(), attacked.name, attacked.getTypeName(), damage);
+    public void moveWest(Graph<Player> graph) {
+        if (pos.x() - 1 >= 0) {
+            moveTo(pos.decX(), graph);
         }
     }
 
-    public boolean isDead() {
-        return health <= 0;
+    public void moveSouth(Graph<Player> graph) {
+        if (pos.y() + 1 >= 0) {
+            moveTo(pos.incY(), graph);
+        }
+    }
+    
+    public void moveEast(Graph<Player> graph) {
+        if (pos.x() + 1 >= 0) {
+            moveTo(pos.incX(), graph);
+        }
     }
 
-    // ----GETTERS----
+    public void draw() {
+        Main.add_img(
+                pos.x() * Main.TILE_LEN / Main.WIN_WIDTH,
+                pos.y() * Main.TILE_LEN / Main.WIN_HEIGHT,
+                Main.TILE_LEN / Main.WIN_WIDTH,
+                Main.TILE_LEN / Main.WIN_HEIGHT,
+                iconFilename,
+                name,
+                true);
+    }
 
-    public String getIcon() {
-        return icon;
+    // this can be overriden so that it does
+    // other stuff like reduced damage or
+    // increased damage
+    // i.e. in Human
+    public void decreaseHealth(int damage) {
+        health -= damage;
+    }
+
+    public void attack(Player other, boolean critical) {
+        int damage = critical ? Math.round(this.damage * CRITICAL_MULTIPLIER) : this.damage;
+
+        other.decreaseHealth(damage);
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + damage;
+        result = prime * result + health;
+        result = prime * result + ((iconFilename == null) ? 0 : iconFilename.hashCode());
+        result = prime * result + ((inv == null) ? 0 : inv.hashCode());
+        result = prime * result + maxHealth;
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + ((pos == null) ? 0 : pos.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Player other = (Player) obj;
+        if (damage != other.damage)
+            return false;
+        if (health != other.health)
+            return false;
+        if (iconFilename == null) {
+            if (other.iconFilename != null)
+                return false;
+        } else if (!iconFilename.equals(other.iconFilename))
+            return false;
+        if (inv == null) {
+            if (other.inv != null)
+                return false;
+        } else if (!inv.equals(other.inv))
+            return false;
+        if (maxHealth != other.maxHealth)
+            return false;
+        if (name == null) {
+            if (other.name != null)
+                return false;
+        } else if (!name.equals(other.name))
+            return false;
+        if (pos == null) {
+            if (other.pos != null)
+                return false;
+        } else if (!pos.equals(other.pos))
+            return false;
+        return true;
+    }
+
+    public String getIconFilename() {
+        return iconFilename;
     }
 
     public String getName() {
         return name;
     }
 
-    public String getTypeName() {
-        return type == Type.Goblin ? "Goblin" : "Human";
-    }
-
-    public int getDamage() {
-        return damage;
+    public Graph.Position getPosition() {
+        return pos;
     }
 }
