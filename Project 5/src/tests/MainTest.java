@@ -1,7 +1,8 @@
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.*;
 
-import java.io.BufferedReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.io.FileReader;
 import java.util.List;
 
@@ -36,8 +37,8 @@ class MainTest {
         String[] arr;
 
         // catch block throws, I can't run my tests without the strings
-        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
-            List<String> strings = reader.lines().toList();
+        try {
+            List<String> strings = Files.readAllLines(Paths.get(filename));
 
             arr = new String[strings.size()];
             for (int i = 0; i < strings.size(); i++) {

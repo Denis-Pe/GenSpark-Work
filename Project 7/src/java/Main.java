@@ -1,9 +1,9 @@
 import utilities.Input;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -25,11 +25,8 @@ public class Main {
 
     static List<String> getHangmanArt() {
         List<String> hangmanArt;
-        try (
-                BufferedReader reader =
-                        new BufferedReader(new FileReader(HMAN_FILENAME))
-        ) {
-            hangmanArt = reader.lines()
+        try {
+            hangmanArt = Files.readAllLines(Paths.get(HMAN_FILENAME)).stream()
                     // reduce from lines to an actual list of the graphics
                     .reduce(new ArrayList<>(), (acc, str) -> {
                         if (acc.isEmpty()) {
@@ -51,11 +48,8 @@ public class Main {
 
     static String getSecretWord() {
         String secretWord;
-        try (
-                BufferedReader reader =
-                        new BufferedReader(new FileReader(WORDS_FILENAME))
-        ) {
-            secretWord = randomItemList(reader.lines().toList());
+        try {
+            secretWord = randomItemList(Files.readAllLines(Paths.get(WORDS_FILENAME)));
         } catch (Exception ignored) {
             System.out.println("Was not able to open file and get a random word." +
                     "\nDefaulting to choice from 12 words...");
@@ -80,12 +74,9 @@ public class Main {
         // scoring system
 
         ArrayList<Integer> scores;
-        try (
-                BufferedReader reader =
-                        new BufferedReader(new FileReader(SCORES_FILENAME))
-        ) {
+        try {
             scores = new ArrayList<> (
-                    reader.lines()
+                    Files.readAllLines(Paths.get(SCORES_FILENAME)).stream()
                     .map(Integer::parseInt)
                     .toList()
             );
@@ -93,9 +84,7 @@ public class Main {
             // create a new one / wipe out the old one if it was corrupt and that caused the error
             // if even this fails then we got bigger problems to worry about
             try {
-                BufferedWriter writer = new BufferedWriter(new FileWriter(SCORES_FILENAME));
-                writer.write("");
-                writer.flush();
+                Files.write(Paths.get(SCORES_FILENAME), new ArrayList<String>(), StandardCharsets.UTF_8);
 
                 scores = new ArrayList<>();
             } catch (Exception anotherOne) {
@@ -114,18 +103,19 @@ public class Main {
             if (currScore > maxScore) {
                 System.out.println("New high score of " + currScore + "!");
             } else {
-                System.out.println("But, tou did not beat your high score of " + maxScore + ".");
+                System.out.println("But, you did not beat your high score of " + maxScore + ".");
             }
 
             scores.add(currScore);
             try {
-                BufferedWriter writer = new BufferedWriter(new FileWriter(SCORES_FILENAME));
 
-                for (int score : scores) {
-                    writer.write(String.valueOf(score) + '\n');
-                }
-
-                writer.flush();
+                Files.write(
+                        Paths.get(SCORES_FILENAME),
+                        scores.stream().map(score -> String.valueOf(score) + '\n').toList(),
+                        StandardCharsets.UTF_8,
+                        StandardOpenOption.CREATE,
+                        StandardOpenOption.APPEND
+                );
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

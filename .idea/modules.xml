@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/GenSpark-Work.iml" filepath="$PROJECT_DIR$/.idea/GenSpark-Work.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Project 1/Project 1.iml" filepath="$PROJECT_DIR$/Project 1/Project 1.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Project 2/Project 2.iml" filepath="$PROJECT_DIR$/Project 2/Project 2.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Project 5/Project 5.iml" filepath="$PROJECT_DIR$/Project 5/Project 5.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Project 6/Project 6.iml" filepath="$PROJECT_DIR$/Project 6/Project 6.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Project 7/Project 7.iml" filepath="$PROJECT_DIR$/Project 7/Project 7.iml" />
+    </modules>
+  </component>
+</project>

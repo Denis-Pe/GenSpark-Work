@@ -1,8 +1,8 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class Game {
     private String answer;
@@ -15,8 +15,8 @@ public class Game {
     Game(boolean randomWord) {
         if (randomWord) {
             // default to "failure" if reading from randomWords.txt
-            try (BufferedReader reader = new BufferedReader(new FileReader("randomWords.txt"))) {
-                List<String> words = reader.lines().toList();
+            try {
+                List<String> words = Files.readAllLines(Paths.get("randomWords.txt"));
                 int listSize = words.size();
                 Random random = new Random();
 
