@@ -21,10 +21,11 @@ public class Main extends Thread {
     public final static float TILE_LEN = 32.0f;
 
     public final static String HUMAN_NAME = "human";
-    public final static String HUMAN_IMG_FILENAME = "lol-squid.jpg";
+    public final static String HUMAN_IMG_FILENAME = "resources/lol-squid.jpg";
     public final static String MAP_NAME = "map";
-    public final static String MAP_IMG_FILENAME = "map.png";
-    public final static String GOBLIN_IMG_FILENAME = "goblin.png";
+    public final static String MAP_IMG_FILENAME = "resources/map.png";
+    public final static String GOBLIN_IMG_FILENAME = "resources/goblin.png";
+    final static String GOBLIN_NAMES_FILENAME = "resources/goblinNames.txt";
 
     static List<String> goblinNames;
 
@@ -54,7 +55,15 @@ public class Main extends Thread {
     Graph<Player> graph;
     Difficulty difficulty;
 
-    Goblin spawnGoblin(Graph.Position pos) {
+    /**
+     * spawn a goblin that is at least {@code distanceFrom} tiles away from
+     * {@code pos}
+     * 
+     * @param distanceFrom
+     * @param pos
+     * @return Goblin spawned
+     */
+    Goblin spawnGoblin(int distanceFrom, Graph.Position pos) {
         Inventory inv = new Inventory().withItem(Item.Weapons.kitchenKnife());
 
         final var name = randomItemList(goblinNames);
@@ -64,7 +73,20 @@ public class Main extends Thread {
             name.replace(name, randomItemList(goblinNames));
         }
 
-        var g = new Goblin(GOBLIN_IMG_FILENAME, name, inv.getScalarEffect(Item.Type.Weapon, 0), inv, pos, graph);
+        class GoblinPosition {
+            public Graph.Position goblinPos = new Graph.Position(randomInt(GRID_WIDTH), randomInt(GRID_HEIGHT));
+        }
+        final GoblinPosition newGoblinPos = new GoblinPosition();
+
+        // make sure we are spawning distanceFrom tiles away from pos
+        while (newGoblinPos.goblinPos.deltaX(pos) < distanceFrom || newGoblinPos.goblinPos.deltaY(pos) < distanceFrom
+        // also make sure we are not spawning on other stuff in the map such as other
+        // goblins
+                || graph.anyEntryMatches(entry -> entry.getKey().equals(newGoblinPos.goblinPos) && entry.getValue() != null)) {
+            newGoblinPos.goblinPos = new Graph.Position(randomInt(GRID_WIDTH), randomInt(GRID_HEIGHT));
+        }
+
+        var g = new Goblin(GOBLIN_IMG_FILENAME, name, inv.getScalarEffect(Item.Type.Weapon, 0), inv, newGoblinPos.goblinPos, graph);
         return g;
     }
 
@@ -80,7 +102,7 @@ public class Main extends Thread {
     // out of their way and everybody is happy
     void mainloop() {
         try {
-            Thread.sleep(1500);
+            Thread.sleep(1000);
         } catch (Exception e) {
             System.out.println("WARNING: Unexpected error: unable to wait during initialization");
         }
@@ -111,7 +133,7 @@ public class Main extends Thread {
 
         // goblin names
         try {
-            goblinNames = Files.readAllLines(Paths.get("resources/goblinNames.txt"));
+            goblinNames = Files.readAllLines(Paths.get(GOBLIN_NAMES_FILENAME));
         } catch (Exception e) {
             throw new RuntimeException("Couldn't read goblin names from file");
         }
@@ -124,7 +146,7 @@ public class Main extends Thread {
         var goblins = new ArrayList<Goblin>();
 
         for (int i = 0; i < 5; i++)
-            goblins.add(spawnGoblin(new Graph.Position(randomInt(30), randomInt(24))));
+            goblins.add(spawnGoblin(5, human.getPosition()));
 
         while (true) {
             boolean mov = false;
@@ -151,9 +173,9 @@ public class Main extends Thread {
                         // maybe the goblin is already aside the player?
                         // if it doesn't work for that or whatever reason,
                         // no biggie
-                        // UNLESS it doesn't work, but that's what the unit tests are for
+                        // UNLESS the graph itself doesn't work, but that's what the unit tests are for
                     }
-                    
+
                 }
             }
         }

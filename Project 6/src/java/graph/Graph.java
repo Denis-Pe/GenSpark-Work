@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.Map.Entry;
 import java.util.function.Predicate;
 
@@ -94,7 +95,7 @@ public class Graph<T> {
          * @return the absolute difference between the x component of this position and
          *         the other position
          */
-        int deltaX(Position other) {
+        public int deltaX(Position other) {
             return Math.abs(x - other.x);
         }
 
@@ -103,7 +104,7 @@ public class Graph<T> {
          * @return the absolute difference between the y component of this position and
          *         the other position
          */
-        int deltaY(Position other) {
+        public int deltaY(Position other) {
             return Math.abs(y - other.y);
         }
 
@@ -193,12 +194,24 @@ public class Graph<T> {
         return nodes.values().contains(val);
     }
 
+    public boolean anyEntryMatches(Predicate<Entry<Position, T>> predicate) {
+        try {
+            return nodes.entrySet().parallelStream().anyMatch(predicate);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     public boolean anyValueMatches(Predicate<T> predicate) {
         try {
             return nodes.values().parallelStream().anyMatch(predicate);
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public Set<Entry<Position, T>> nodesSet() {
+        return nodes.entrySet();
     }
 
     /**
