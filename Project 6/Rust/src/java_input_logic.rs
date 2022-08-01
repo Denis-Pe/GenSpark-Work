@@ -1,8 +1,57 @@
 use winit::event::VirtualKeyCode;
+use jni::objects::{JClass, JString};
+use jni::JNIEnv;
 
-pub fn string_to_virtual_key_code(key: &mut String) -> Option<VirtualKeyCode> {
+use std::sync::Mutex;
+
+use winit_input_helper::WinitInputHelper;
+
+lazy_static! {
+    pub static ref WINIT_INPUT: Mutex<WinitInputHelper> = Mutex::new(WinitInputHelper::new());
+}
+
+#[no_mangle]
+pub extern "system" fn Java_main_Main_is_1key_1pressed(
+    env: JNIEnv,
+    _class: JClass,
+    key: JString,
+) -> bool {
+    let mut key_ruststr: String = env.get_string(key).unwrap().into();
+    WINIT_INPUT.lock().unwrap().key_pressed(
+        string_to_virtual_key_code(&mut key_ruststr)
+            .unwrap_or_else(|| panic!("Invalid key given!")),
+    )
+}
+
+#[no_mangle]
+pub extern "system" fn Java_main_Main_is_1key_1released(
+    env: JNIEnv,
+    _class: JClass,
+    key: JString,
+) -> bool {
+    let mut key_ruststr: String = env.get_string(key).unwrap().into();
+    WINIT_INPUT.lock().unwrap().key_released(
+        string_to_virtual_key_code(&mut key_ruststr)
+            .unwrap_or_else(|| panic!("Invalid key given!")),
+    )
+}
+
+#[no_mangle]
+pub extern "system" fn Java_main_Main_is_1key_1held(
+    env: JNIEnv,
+    _class: JClass,
+    key: JString,
+) -> bool {
+    let mut key_ruststr: String = env.get_string(key).unwrap().into();
+    WINIT_INPUT.lock().unwrap().key_held(
+        string_to_virtual_key_code(&mut key_ruststr)
+            .unwrap_or_else(|| panic!("Invalid key given!")),
+    )
+}
+
+fn string_to_virtual_key_code(key: &mut String) -> Option<VirtualKeyCode> {
     key.make_ascii_lowercase();
-    
+
     match key.as_str() {
         "1" => Some(VirtualKeyCode::Key1),
         "2" => Some(VirtualKeyCode::Key2),
@@ -158,6 +207,6 @@ pub fn string_to_virtual_key_code(key: &mut String) -> Option<VirtualKeyCode> {
         "copy" => Some(VirtualKeyCode::Copy),
         "paste" => Some(VirtualKeyCode::Paste),
         "cut" => Some(VirtualKeyCode::Cut),
-        _ => None
+        _ => None,
     }
 }
